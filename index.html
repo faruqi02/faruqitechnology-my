@@ -148,6 +148,7 @@
     <p>Tech • Future • Digital</p>
 
     <button onclick="toggleText()">ACTIVATE</button>
+    <button onclick="toggleTaskPage()">Task Page</button>
   </div>
 
   <!-- Script -->
@@ -158,6 +159,10 @@
         text.innerHTML.includes("FARUQI")
           ? "SYSTEM<br>ONLINE"
           : "FARUQI<br>TECHNOLOGY";
+    }
+
+        function toggleTaskPage() {
+      window.location.href = "Managing-task.html";
     }
   </script>
 
