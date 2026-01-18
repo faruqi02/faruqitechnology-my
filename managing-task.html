@@ -118,7 +118,7 @@
             flex-direction: column;
             border-left: 8px solid var(--accent);
             user-select: none;
-            overflow: hidden; /* Keeps content inside during resize */
+            overflow: hidden; 
         }
 
         .task-card.selected {
@@ -186,29 +186,41 @@
             text-transform: uppercase;
         }
 
-        /* ZOOM CONTROLS */
+        /* ZOOM CONTROLS - REPOSITIONED BESIDE TOOLBAR */
         .zoom-controls {
             position: fixed;
-            bottom: 100px;
-            right: 20px;
+            top: 20px;
+            left: 810px; /* Positioned to the right of the desktop toolbar */
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Horizontal */
             gap: 8px;
-            z-index: 1001;
+            z-index: 1000;
+            background: var(--toolbar-bg);
+            padding: 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 20px var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .zoom-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--toolbar-bg);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--card-bg);
             color: var(--text-main);
-            box-shadow: 0 4px 10px var(--shadow);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: var(--primary-btn);
+            color: white;
         }
         
         #canvas {
@@ -254,10 +266,25 @@
             display: none;
         }
 
+        @media (max-width: 1100px) {
+            .zoom-controls {
+                position: static; /* Let it flow in flexbox if needed, or stick to absolute */
+                margin-left: 0;
+            }
+            #toolbar-container {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                display: flex;
+                gap: 12px;
+                z-index: 1000;
+            }
+        }
+
         @media (max-width: 768px) {
-            #toolbar { top: auto; bottom: 20px; left: 10px; right: 10px; flex-wrap: wrap; justify-content: center; padding: 8px; gap: 8px; }
+            #toolbar { top: auto; bottom: 85px; left: 10px; right: 10px; flex-wrap: wrap; justify-content: center; padding: 8px; gap: 8px; }
+            .zoom-controls { top: auto; bottom: 20px; left: 10px; right: 10px; width: auto; justify-content: center; }
             button, select { padding: 8px 12px; font-size: 13px; flex-grow: 1; justify-content: center; }
-            .zoom-controls { bottom: 140px; }
             .task-card { width: 180px; }
         }
     </style>
@@ -279,29 +306,31 @@
         </div>
     </div>
 
-    <div id="toolbar" onmousedown="event.stopPropagation()">
-        <button class="btn-main" onclick="createTask()">
-            <i class="bi bi-plus-lg"></i> Add New Task
-        </button>
-        <select id="userSelect"></select>
-        <button class="btn-sub" onclick="addUser()">
-            <i class="bi bi-person-plus"></i> Add User
-        </button>
-        <button class="btn-sub" onclick="editUser()">
-            <i class="bi bi-pencil-square"></i> Edit User
-        </button>
-        <button class="btn-danger" onclick="deleteUser()">
-            <i class="bi bi-trash3"></i> Delete User
-        </button>
-        <button id="themeToggle" class="btn-sub" onclick="toggleTheme()">
-            <i id="themeIcon" class="bi bi-sun-fill"></i>
-        </button>
-    </div>
+    <div id="toolbar-container">
+        <div id="toolbar" onmousedown="event.stopPropagation()">
+            <button class="btn-main" onclick="createTask()">
+                <i class="bi bi-plus-lg"></i> Add New Task
+            </button>
+            <select id="userSelect"></select>
+            <button class="btn-sub" onclick="addUser()">
+                <i class="bi bi-person-plus"></i> Add User
+            </button>
+            <button class="btn-sub" onclick="editUser()">
+                <i class="bi bi-pencil-square"></i> Edit User
+            </button>
+            <button class="btn-danger" onclick="deleteUser()">
+                <i class="bi bi-trash3"></i> Delete User
+            </button>
+            <button id="themeToggle" class="btn-sub" onclick="toggleTheme()">
+                <i id="themeIcon" class="bi bi-sun-fill"></i>
+            </button>
+        </div>
 
-    <div class="zoom-controls">
-        <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
-        <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
-        <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
+        <div class="zoom-controls" onmousedown="event.stopPropagation()">
+            <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
+            <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
+            <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
+        </div>
     </div>
 
     <div id="canvas"></div>
@@ -419,18 +448,13 @@
                 };
 
                 const onEnd = () => {
-                    // Snap to grid
                     let finalW = Math.round(card.offsetWidth / gridSize) * gridSize;
                     let finalH = Math.round(card.offsetHeight / gridSize) * gridSize;
-                    // Min size limit (1 grid cell)
                     finalW = Math.max(gridSize * 2, finalW);
                     finalH = Math.max(gridSize * 2, finalH);
-
                     card.style.width = finalW + 'px';
                     card.style.height = finalH + 'px';
-                    
                     updateTask(parseInt(card.dataset.id), 'size', { w: finalW, h: finalH });
-                    
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onEnd);
                 };
