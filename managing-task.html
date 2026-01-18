@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spatial Task Manager</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -48,6 +48,7 @@
             color: var(--text-main);
             transition: background-color 0.3s, color 0.3s;
             overflow: hidden;
+            touch-action: none; /* Prevents browser pull-to-refresh interfering with canvas */
         }
 
         /* LASSO STYLING */
@@ -60,14 +61,19 @@
             z-index: 10000;
         }
 
-        /* TOOLBAR */
-        #toolbar {
+        /* --- TOOLBAR CONTAINER SYSTEM --- */
+        #toolbar-container {
             position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 1000;
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        #toolbar, .zoom-controls {
+            display: flex;
             align-items: center;
             background: var(--toolbar-bg);
             padding: 10px 15px;
@@ -75,10 +81,40 @@
             backdrop-filter: blur(8px);
             box-shadow: 0 4px 20px var(--shadow);
             border: 1px solid rgba(0, 0, 0, 0.05);
+            gap: 12px;
         }
 
-        button,
-        select {
+        @media (max-width: 768px) {
+            #toolbar-container {
+                top: auto;
+                bottom: 20px;
+                left: 10px;
+                right: 10px;
+                flex-direction: column-reverse;
+                gap: 10px;
+            }
+            #toolbar {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 12px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .zoom-controls {
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+            }
+            button, select {
+                flex: 1 1 auto;
+                justify-content: center;
+                font-size: 13px;
+                padding: 10px 8px;
+            }
+            #themeToggle { flex: 0 0 50px; }
+        }
+
+        button, select {
             padding: 10px 16px;
             border-radius: 8px;
             border: none;
@@ -89,6 +125,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
         }
 
         .btn-main { background: var(--primary-btn); color: white; }
@@ -119,6 +156,7 @@
             border-left: 8px solid var(--accent);
             user-select: none;
             overflow: hidden; 
+            touch-action: none; /* Crucial: Prevents touch-scrolling when interacting with cards */
         }
 
         .task-card.selected {
@@ -153,21 +191,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
+            margin-top: auto;
             padding-top: 10px;
             border-top: 1px solid var(--grid-color);
         }
 
-        /* RESIZE HANDLE */
         .resizer {
-            width: 15px;
-            height: 15px;
+            width: 25px; /* Larger hit-area for touch devices */
+            height: 25px;
             border-radius: 0 0 12px 0;
             background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
             position: absolute;
             right: 0;
             bottom: 0;
             cursor: nwse-resize;
+            touch-action: none;
         }
 
         .color-picker {
@@ -184,23 +222,6 @@
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-        }
-
-        /* ZOOM CONTROLS - REPOSITIONED BESIDE TOOLBAR */
-        .zoom-controls {
-            position: fixed;
-            top: 20px;
-            left: 810px; /* Positioned to the right of the desktop toolbar */
-            display: flex;
-            flex-direction: row; /* Horizontal */
-            gap: 8px;
-            z-index: 1000;
-            background: var(--toolbar-bg);
-            padding: 10px;
-            border-radius: 12px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px var(--shadow);
-            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .zoom-btn {
@@ -265,28 +286,6 @@
             outline: none;
             display: none;
         }
-
-        @media (max-width: 1100px) {
-            .zoom-controls {
-                position: static; /* Let it flow in flexbox if needed, or stick to absolute */
-                margin-left: 0;
-            }
-            #toolbar-container {
-                position: fixed;
-                top: 20px;
-                left: 20px;
-                display: flex;
-                gap: 12px;
-                z-index: 1000;
-            }
-        }
-
-        @media (max-width: 768px) {
-            #toolbar { top: auto; bottom: 85px; left: 10px; right: 10px; flex-wrap: wrap; justify-content: center; padding: 8px; gap: 8px; }
-            .zoom-controls { top: auto; bottom: 20px; left: 10px; right: 10px; width: auto; justify-content: center; }
-            button, select { padding: 8px 12px; font-size: 13px; flex-grow: 1; justify-content: center; }
-            .task-card { width: 180px; }
-        }
     </style>
 </head>
 
@@ -307,7 +306,13 @@
     </div>
 
     <div id="toolbar-container">
-        <div id="toolbar" onmousedown="event.stopPropagation()">
+        <div class="zoom-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+            <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
+            <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
+            <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
+        </div>
+
+        <div id="toolbar" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
             <button class="btn-main" onclick="createTask()">
                 <i class="bi bi-plus-lg"></i> Add New Task
             </button>
@@ -324,12 +329,6 @@
             <button id="themeToggle" class="btn-sub" onclick="toggleTheme()">
                 <i id="themeIcon" class="bi bi-sun-fill"></i>
             </button>
-        </div>
-
-        <div class="zoom-controls" onmousedown="event.stopPropagation()">
-            <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
-            <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
-            <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
         </div>
     </div>
 
@@ -362,13 +361,14 @@
                 });
                 selectedTasks.clear();
             }
-            const startX = e.clientX;
-            const startY = e.clientY;
+            const startX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const startY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
             lasso.style.display = 'block';
             lasso.style.width = '0px'; lasso.style.height = '0px';
 
             function onMouseMove(moveEvent) {
-                const currentX = moveEvent.clientX; const currentY = moveEvent.clientY;
+                const currentX = moveEvent.clientX || (moveEvent.touches ? moveEvent.touches[0].clientX : 0);
+                const currentY = moveEvent.clientY || (moveEvent.touches ? moveEvent.touches[0].clientY : 0);
                 const left = Math.min(startX, currentX); const top = Math.min(startY, currentY);
                 const width = Math.abs(currentX - startX); const height = Math.abs(currentY - startY);
                 lasso.style.left = left + 'px'; lasso.style.top = top + 'px';
@@ -428,21 +428,26 @@
             makeResizable(card);
         }
 
-        // --- RESIZE LOGIC (SNAP TO GRID) ---
+        // --- RESIZE LOGIC (SNAP TO GRID + TOUCH) ---
         function makeResizable(card) {
             const resizer = card.querySelector('.resizer');
-            resizer.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            
+            const onStart = (e) => {
+                e.preventDefault(); e.stopPropagation();
                 
-                let startX = e.clientX;
-                let startY = e.clientY;
+                const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                
+                let startX = clientX;
+                let startY = clientY;
                 let startW = card.offsetWidth;
                 let startH = card.offsetHeight;
 
-                const onMove = (e) => {
-                    let currentW = startW + (e.clientX - startX) / scale;
-                    let currentH = startH + (e.clientY - startY) / scale;
+                const onMove = (me) => {
+                    const currentX = me.clientX || (me.touches ? me.touches[0].clientX : 0);
+                    const currentY = me.clientY || (me.touches ? me.touches[0].clientY : 0);
+                    let currentW = startW + (currentX - startX) / scale;
+                    let currentH = startH + (currentY - startY) / scale;
                     card.style.width = currentW + 'px';
                     card.style.height = currentH + 'px';
                 };
@@ -455,41 +460,56 @@
                     card.style.width = finalW + 'px';
                     card.style.height = finalH + 'px';
                     updateTask(parseInt(card.dataset.id), 'size', { w: finalW, h: finalH });
+                    
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
                 };
 
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onEnd);
-            });
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd);
+            };
+
+            resizer.addEventListener('mousedown', onStart);
+            resizer.addEventListener('touchstart', onStart, { passive: false });
         }
 
-        // --- DRAG LOGIC ---
+        // --- DRAG LOGIC (SNAP TO GRID + TOUCH) ---
         function makeDraggable(el) {
             let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
+            
             const onStart = (e) => {
                 if (['INPUT', 'TEXTAREA', 'SPAN', 'I'].includes(e.target.tagName) || e.target.className === 'resizer') return;
+                
                 const coords = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
                 p3 = coords.x; p4 = coords.y;
+                
                 const elId = parseInt(el.dataset.id);
                 if (!selectedTasks.has(elId)) {
                     document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
                     selectedTasks.clear(); selectedTasks.add(elId); el.classList.add('selected');
                 }
+                
                 const dragItems = [];
                 selectedTasks.forEach(id => {
                     const itemEl = document.querySelector(`[data-id="${id}"]`);
                     if (itemEl) dragItems.push({ el: itemEl, x: itemEl.offsetLeft, y: itemEl.offsetTop });
                 });
-                const onMove = (e) => {
-                    const moveCoords = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+
+                const onMove = (me) => {
+                    const moveCoords = me.touches ? { x: me.touches[0].clientX, y: me.touches[0].clientY } : { x: me.clientX, y: me.clientY };
                     p1 = (p3 - moveCoords.x) / scale; p2 = (p4 - moveCoords.y) / scale;
                     p3 = moveCoords.x; p4 = moveCoords.y;
+                    
                     dragItems.forEach(item => {
                         item.x -= p1; item.y -= p2;
                         item.el.style.left = item.x + "px"; item.el.style.top = item.y + "px";
                     });
                 };
+
                 const onEnd = () => {
                     dragItems.forEach(item => {
                         let fx = Math.round(item.el.offsetLeft / gridSize) * gridSize;
@@ -498,10 +518,17 @@
                         updateTask(parseInt(item.el.dataset.id), 'pos', { x: fx, y: fy });
                     });
                     document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd);
                 };
-                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onEnd);
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd);
             };
+            
             el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, { passive: false });
         }
 
         // --- UTILS ---
