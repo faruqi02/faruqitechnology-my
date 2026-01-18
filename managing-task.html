@@ -48,7 +48,6 @@
             color: var(--text-main);
             transition: background-color 0.3s, color 0.3s;
             overflow: hidden;
-            /* Prevent body scroll during drag */
         }
 
         /* LASSO STYLING */
@@ -92,27 +91,10 @@
             gap: 8px;
         }
 
-        .btn-main {
-            background: var(--primary-btn);
-            color: white;
-        }
-
-        .btn-sub {
-            background: var(--card-bg);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-danger {
-            background: var(--card-bg);
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-
-        .btn-danger:hover {
-            background: var(--danger);
-            color: #ffffff;
-        }
+        .btn-main { background: var(--primary-btn); color: white; }
+        .btn-sub { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-danger { background: var(--card-bg); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: #ffffff; }
 
         select {
             background: var(--card-bg);
@@ -125,7 +107,7 @@
         .task-card {
             position: absolute;
             width: 240px;
-            min-height: 120px;
+            min-height: 160px;
             background: var(--card-bg);
             border-radius: 12px;
             padding: 15px;
@@ -136,9 +118,9 @@
             flex-direction: column;
             border-left: 8px solid var(--accent);
             user-select: none;
+            overflow: hidden; /* Keeps content inside during resize */
         }
 
-        /* Selection highlight */
         .task-card.selected {
             outline: 2px solid var(--accent);
             box-shadow: 0 0 10px var(--accent);
@@ -159,12 +141,11 @@
             background: transparent;
             border: none;
             resize: none;
-            overflow: hidden;
             font-size: 14px;
             color: var(--text-sub);
             outline: none;
             width: 100%;
-            min-height: 40px;
+            flex: 1;
             line-height: 1.5;
         }
 
@@ -172,9 +153,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
+            margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid var(--grid-color);
+        }
+
+        /* RESIZE HANDLE */
+        .resizer {
+            width: 15px;
+            height: 15px;
+            border-radius: 0 0 12px 0;
+            background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            cursor: nwse-resize;
         }
 
         .color-picker {
@@ -193,9 +186,34 @@
             text-transform: uppercase;
         }
 
-        #themeToggle {
-            font-size: 1.2rem;
-            padding: 8px 12px;
+        /* ZOOM CONTROLS */
+        .zoom-controls {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+        }
+
+        .zoom-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--toolbar-bg);
+            color: var(--text-main);
+            box-shadow: 0 4px 10px var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        #canvas {
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
         }
 
         /* MODAL POPUP STYLING */
@@ -223,18 +241,6 @@
             text-align: center;
         }
 
-        .modal-box h3 {
-            margin-top: 0;
-            color: var(--text-main);
-            font-size: 1.2rem;
-        }
-
-        .modal-box p {
-            color: var(--text-sub);
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-        }
-
         .modal-input {
             width: 100%;
             padding: 12px;
@@ -246,85 +252,13 @@
             box-sizing: border-box;
             outline: none;
             display: none;
-            /* Shown only when needed */
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        /* Zoom Control Buttons */
-        .zoom-controls {
-            position: fixed;
-            bottom: 100px;
-            /* Placed above the mobile toolbar */
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 1001;
-        }
-
-        .zoom-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--toolbar-bg);
-            color: var(--text-main);
-            box-shadow: 0 4px 10px var(--shadow);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        #canvas {
-            transform-origin: 0 0;
-            /* Ensures zooming expands from the top-left */
-            transition: transform 0.1s ease-out;
         }
 
         @media (max-width: 768px) {
-            .zoom-controls {
-                bottom: 140px;
-                /* Adjust based on toolbar height */
-            }
-        }
-
-        @media (max-width: 768px) {
-            #toolbar {
-                top: auto;
-                bottom: 20px;
-                left: 10px;
-                right: 10px;
-                flex-wrap: wrap;
-                justify-content: center;
-                padding: 8px;
-                gap: 8px;
-            }
-
-            /* Make buttons smaller/tighter for mobile */
-            button,
-            select {
-                padding: 8px 12px;
-                font-size: 13px;
-                flex-grow: 1;
-                /* Buttons fill space evenly */
-                justify-content: center;
-            }
-
-            /* Hide the vertical separator on mobile */
-            #toolbar div[style*="border-left"] {
-                display: none;
-            }
-
-            .task-card {
-                width: 180px;
-                /* Smaller cards for mobile */
-            }
+            #toolbar { top: auto; bottom: 20px; left: 10px; right: 10px; flex-wrap: wrap; justify-content: center; padding: 8px; gap: 8px; }
+            button, select { padding: 8px 12px; font-size: 13px; flex-grow: 1; justify-content: center; }
+            .zoom-controls { bottom: 140px; }
+            .task-card { width: 180px; }
         }
     </style>
 </head>
@@ -338,7 +272,7 @@
             <h3 id="modalTitle">Confirm Action</h3>
             <p id="modalMessage"></p>
             <input type="text" id="modalInput" class="modal-input">
-            <div class="modal-buttons">
+            <div style="display:flex; justify-content:center; gap:12px;">
                 <button class="btn-sub" onclick="handleModalResponse(false)">Cancel</button>
                 <button id="modalConfirmBtn" class="btn-main" onclick="handleModalResponse(true)">Confirm</button>
             </div>
@@ -349,28 +283,27 @@
         <button class="btn-main" onclick="createTask()">
             <i class="bi bi-plus-lg"></i> Add New Task
         </button>
-        <div style="border-left: 1px solid var(--border-color); height: 24px; margin: 0 5px;"></div>
-
         <select id="userSelect"></select>
-
         <button class="btn-sub" onclick="addUser()">
             <i class="bi bi-person-plus"></i> Add User
+        </button>
+        <button class="btn-sub" onclick="editUser()">
+            <i class="bi bi-pencil-square"></i> Edit User
         </button>
         <button class="btn-danger" onclick="deleteUser()">
             <i class="bi bi-trash3"></i> Delete User
         </button>
-
-        <div style="border-left: 1px solid var(--border-color); height: 24px; margin: 0 5px;"></div>
-
-        <button id="themeToggle" class="btn-sub" onclick="toggleTheme()" title="Switch Light/Dark Mode">
+        <button id="themeToggle" class="btn-sub" onclick="toggleTheme()">
             <i id="themeIcon" class="bi bi-sun-fill"></i>
         </button>
     </div>
+
     <div class="zoom-controls">
-    <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
-    <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
-    <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
-</div>
+        <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
+        <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
+        <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
+    </div>
+
     <div id="canvas"></div>
 
     <script>
@@ -378,24 +311,21 @@
         const canvas = document.getElementById('canvas');
         const userSelect = document.getElementById('userSelect');
         const lasso = document.getElementById('lasso');
-
-        // Modal references
         const modalOverlay = document.getElementById('modalOverlay');
         const modalInput = document.getElementById('modalInput');
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        
         let modalResolver = null;
-
         let currentUser = localStorage.getItem('lastUser') || 'Personal';
         let allUserData = JSON.parse(localStorage.getItem('spatialTaskData')) || { 'Personal': [], 'Work': [] };
         let selectedTasks = new Set();
+        let scale = 1;
 
-        // --- LASSO SELECTION LOGIC ---
+        // --- LASSO SELECTION ---
         function initLasso(e) {
             if (e.target !== document.body && e.target !== canvas) return;
-
-            // Clear current selection unless Shift is held
             if (!e.shiftKey) {
                 selectedTasks.forEach(id => {
                     const el = document.querySelector(`[data-id="${id}"]`);
@@ -403,192 +333,47 @@
                 });
                 selectedTasks.clear();
             }
-
             const startX = e.clientX;
             const startY = e.clientY;
-            lasso.style.left = startX + 'px';
-            lasso.style.top = startY + 'px';
-            lasso.style.width = '0px';
-            lasso.style.height = '0px';
             lasso.style.display = 'block';
+            lasso.style.width = '0px'; lasso.style.height = '0px';
 
             function onMouseMove(moveEvent) {
-                const currentX = moveEvent.clientX;
-                const currentY = moveEvent.clientY;
-
-                const left = Math.min(startX, currentX);
-                const top = Math.min(startY, currentY);
-                const width = Math.abs(currentX - startX);
-                const height = Math.abs(currentY - startY);
-
-                lasso.style.left = left + 'px';
-                lasso.style.top = top + 'px';
-                lasso.style.width = width + 'px';
-                lasso.style.height = height + 'px';
-
-                // Detect collision
+                const currentX = moveEvent.clientX; const currentY = moveEvent.clientY;
+                const left = Math.min(startX, currentX); const top = Math.min(startY, currentY);
+                const width = Math.abs(currentX - startX); const height = Math.abs(currentY - startY);
+                lasso.style.left = left + 'px'; lasso.style.top = top + 'px';
+                lasso.style.width = width + 'px'; lasso.style.height = height + 'px';
                 document.querySelectorAll('.task-card').forEach(card => {
                     const rect = card.getBoundingClientRect();
                     const cardId = parseInt(card.dataset.id);
-
-                    const isInside = (
-                        rect.left < left + width &&
-                        rect.left + rect.width > left &&
-                        rect.top < top + height &&
-                        rect.top + rect.height > top
-                    );
-
-                    if (isInside) {
-                        card.classList.add('selected');
-                        selectedTasks.add(cardId);
-                    } else if (!e.shiftKey) {
-                        card.classList.remove('selected');
-                        selectedTasks.delete(cardId);
-                    }
+                    const isInside = (rect.left < left + width && rect.left + rect.width > left && rect.top < top + height && rect.top + rect.height > top);
+                    if (isInside) { card.classList.add('selected'); selectedTasks.add(cardId); }
+                    else if (!e.shiftKey) { card.classList.remove('selected'); selectedTasks.delete(cardId); }
                 });
             }
-
-            function onMouseUp() {
-                lasso.style.display = 'none';
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
+            function onMouseUp() { lasso.style.display = 'none'; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
+            document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
         }
 
-        // --- UNIVERSAL MODAL SYSTEM ---
+        // --- UNIVERSAL MODAL ---
         async function showModal({ title, message, type = 'confirm', defaultValue = "" }) {
-            modalTitle.innerText = title;
-            modalMessage.innerText = message || "";
-            modalInput.value = defaultValue;
-
-            modalInput.style.display = (type === 'prompt') ? 'block' : 'none';
+            modalTitle.innerText = title; modalMessage.innerText = message || "";
+            modalInput.value = defaultValue; modalInput.style.display = (type === 'prompt') ? 'block' : 'none';
             modalConfirmBtn.className = (type === 'danger') ? 'btn-danger' : 'btn-main';
-            modalConfirmBtn.innerText = (type === 'danger') ? 'Delete' : 'Confirm';
-
             modalOverlay.style.display = 'flex';
-            if (type === 'prompt') setTimeout(() => modalInput.focus(), 10);
-
-            return new Promise((resolve) => {
-                modalResolver = resolve;
-            });
+            return new Promise(r => modalResolver = r);
         }
-
         function handleModalResponse(confirmed) {
             modalOverlay.style.display = 'none';
-            if (!confirmed) {
-                modalResolver(null);
-            } else {
-                modalResolver(modalInput.style.display === 'block' ? modalInput.value : true);
-            }
+            if (!confirmed) return modalResolver(null);
+            modalResolver(modalInput.style.display === 'block' ? modalInput.value : true);
         }
 
-        window.addEventListener("keyup", (e) => {
-            if (modalOverlay.style.display === 'flex') {
-                if (e.key === "Enter") handleModalResponse(true);
-                if (e.key === "Escape") handleModalResponse(false);
-            }
-        });
-
-        // --- THEME & APP LOGIC ---
-        function updateThemeIcon(theme) {
-            document.getElementById('themeIcon').className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
-        }
-
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            let activeTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', activeTheme);
-            updateThemeIcon(activeTheme);
-        }
-
-        function toggleTheme() {
-            const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('theme', target);
-            updateThemeIcon(target);
-        }
-
-        window.onload = () => { initTheme(); refreshUserDropdown(); loadUserTasks(); };
-
-        function refreshUserDropdown() {
-            userSelect.innerHTML = '';
-            Object.keys(allUserData).forEach(user => {
-                const opt = document.createElement('option');
-                opt.value = user; opt.textContent = user;
-                if (user === currentUser) opt.selected = true;
-                userSelect.appendChild(opt);
-            });
-            userSelect.onchange = (e) => switchUser(e.target.value);
-            userSelect.ondblclick = () => renameUser(userSelect.value);
-        }
-
-        async function addUser() {
-            const name = await showModal({ title: "New Workspace", type: 'prompt' });
-            if (name && !allUserData[name]) {
-                allUserData[name] = [];
-                currentUser = name;
-                saveAll(); refreshUserDropdown(); loadUserTasks();
-            } else if (allUserData[name]) { alert("Name already exists."); }
-        }
-
-        async function deleteUser() {
-            if (Object.keys(allUserData).length <= 1) return alert("Minimum one workspace required.");
-            const confirmed = await showModal({
-                title: "Delete Workspace",
-                message: `Are you sure you want to delete "${currentUser}"? All tasks will be lost forever.`,
-                type: 'danger'
-            });
-            if (confirmed) {
-                delete allUserData[currentUser];
-                currentUser = Object.keys(allUserData)[0];
-                saveAll(); refreshUserDropdown(); loadUserTasks();
-            }
-        }
-
-        async function renameUser(oldName) {
-            const newName = await showModal({ title: "Rename Workspace", type: 'prompt', defaultValue: oldName });
-            if (newName && newName !== oldName && !allUserData[newName]) {
-                allUserData[newName] = allUserData[oldName];
-                delete allUserData[oldName];
-                currentUser = newName;
-                saveAll(); refreshUserDropdown();
-            }
-        }
-
-        function switchUser(val) { currentUser = val; saveAll(); loadUserTasks(); }
-
-        function loadUserTasks() {
-            canvas.innerHTML = '';
-            selectedTasks.clear();
-            (allUserData[currentUser] || []).forEach(task => renderTask(task));
-        }
-
+        // --- TASK LOGIC ---
         function createTask() {
-            // Calculate a staggered position based on existing tasks
-            const taskCount = allUserData[currentUser].length;
-            const staggerOffset = 30; // pixels to shift each new task
-
-            // Start at 120, 120 to clear the toolbar, then shift based on count
-            // The % 10 prevents it from moving off-screen infinitely
-            const startX = 120 + ((taskCount % 10) * staggerOffset);
-            const startY = 120 + ((taskCount % 10) * staggerOffset);
-
-            // Snap the calculated position to the grid
-            const snappedX = Math.round(startX / gridSize) * gridSize;
-            const snappedY = Math.round(startY / gridSize) * gridSize;
-
-            const newTask = {
-                id: Date.now(),
-                title: 'New Task',
-                desc: 'Details...',
-                color: '#007bff',
-                x: snappedX,
-                y: snappedY
-            };
-
+            const id = Date.now();
+            const newTask = { id, title: 'New Task', desc: 'Details...', color: '#007bff', x: 120, y: 120, w: 240, h: 120 };
             allUserData[currentUser].push(newTask);
             renderTask(newTask);
             saveAll();
@@ -598,175 +383,163 @@
             const card = document.createElement('div');
             card.className = 'task-card';
             card.style.left = task.x + 'px'; card.style.top = task.y + 'px';
+            card.style.width = (task.w || 240) + 'px'; card.style.height = (task.h || 120) + 'px';
             card.style.borderLeftColor = task.color;
             card.dataset.id = task.id;
             card.innerHTML = `
                 <input type="text" class="title-input" value="${task.title}" onchange="updateTask(${task.id}, 'title', this.value)">
-                <textarea class="task-textarea" oninput="autoExpand(this); updateTask(${task.id}, 'desc', this.value)">${task.desc}</textarea>
+                <textarea class="task-textarea" oninput="updateTask(${task.id}, 'desc', this.value)">${task.desc}</textarea>
                 <div class="card-footer">
                     <input type="color" class="color-picker" value="${task.color}" oninput="updateTask(${task.id}, 'color', this.value); this.closest('.task-card').style.borderLeftColor = this.value">
                     <span class="delete-btn" onclick="deleteTask(${task.id})"><i class="bi bi-trash-fill"></i> REMOVE</span>
-                </div>`;
+                </div>
+                <div class="resizer"></div>`;
             canvas.appendChild(card);
-            autoExpand(card.querySelector('textarea'));
             makeDraggable(card);
+            makeResizable(card);
         }
 
-        async function deleteTask(id) {
-            const confirmed = await showModal({
-                title: "Delete Task",
-                message: "Discard this task card?",
-                type: 'danger'
-            });
-            if (confirmed) {
-                allUserData[currentUser] = allUserData[currentUser].filter(t => t.id !== id);
-                const el = document.querySelector(`[data-id="${id}"]`);
-                if (el) el.remove();
-                selectedTasks.delete(id);
-                saveAll();
-            }
-        }
-
-        function autoExpand(t) { t.style.height = 'inherit'; t.style.height = t.scrollHeight + 'px'; }
-
-        // --- MULTI-DRAG DRAGGABLE ---
-        function makeDraggable(el) {
-            let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
-
-            // Helper to get coordinates from either Mouse or Touch
-            const getCoords = (e) => {
-                return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
-            };
-
-            const onStart = (e) => {
-                if (['INPUT', 'TEXTAREA', 'SPAN', 'I'].includes(e.target.tagName)) return;
-
-                // Prevent scrolling when dragging on mobile
-                if (e.type === 'touchstart') e.preventDefault();
-
-                const coords = getCoords(e);
-                p3 = coords.x;
-                p4 = coords.y;
-
-                const elId = parseInt(el.dataset.id);
-                if (!selectedTasks.has(elId)) {
-                    document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
-                    selectedTasks.clear();
-                    selectedTasks.add(elId);
-                    el.classList.add('selected');
-                }
-
-                const dragItems = [];
-                selectedTasks.forEach(id => {
-                    const itemEl = document.querySelector(`[data-id="${id}"]`);
-                    if (itemEl) {
-                        dragItems.push({ el: itemEl, x: itemEl.offsetLeft, y: itemEl.offsetTop });
-                    }
-                });
+        // --- RESIZE LOGIC (SNAP TO GRID) ---
+        function makeResizable(card) {
+            const resizer = card.querySelector('.resizer');
+            resizer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                let startX = e.clientX;
+                let startY = e.clientY;
+                let startW = card.offsetWidth;
+                let startH = card.offsetHeight;
 
                 const onMove = (e) => {
-                    const moveCoords = getCoords(e);
-                    p1 = p3 - moveCoords.x;
-                    p2 = p4 - moveCoords.y;
-                    p3 = moveCoords.x;
-                    p4 = moveCoords.y;
-
-                    dragItems.forEach(item => {
-                        item.x -= p1;
-                        item.y -= p2;
-                        item.el.style.left = item.x + "px";
-                        item.el.style.top = item.y + "px";
-                    });
+                    let currentW = startW + (e.clientX - startX) / scale;
+                    let currentH = startH + (e.clientY - startY) / scale;
+                    card.style.width = currentW + 'px';
+                    card.style.height = currentH + 'px';
                 };
 
                 const onEnd = () => {
-                    dragItems.forEach(item => {
-                        let fx = Math.round(item.el.offsetLeft / gridSize) * gridSize;
-                        let fy = Math.round(item.el.offsetTop / gridSize) * gridSize;
-                        item.el.style.left = fx + "px";
-                        item.el.style.top = fy + "px";
-                        updateTask(parseInt(item.el.dataset.id), 'pos', { x: fx, y: fy });
-                    });
+                    // Snap to grid
+                    let finalW = Math.round(card.offsetWidth / gridSize) * gridSize;
+                    let finalH = Math.round(card.offsetHeight / gridSize) * gridSize;
+                    // Min size limit (1 grid cell)
+                    finalW = Math.max(gridSize * 2, finalW);
+                    finalH = Math.max(gridSize * 2, finalH);
+
+                    card.style.width = finalW + 'px';
+                    card.style.height = finalH + 'px';
+                    
+                    updateTask(parseInt(card.dataset.id), 'size', { w: finalW, h: finalH });
+                    
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', onEnd);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onEnd);
                 };
 
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', onEnd);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onEnd);
-            };
-
-            el.addEventListener('mousedown', onStart);
-            el.addEventListener('touchstart', onStart, { passive: false });
+            });
         }
 
+        // --- DRAG LOGIC ---
+        function makeDraggable(el) {
+            let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
+            const onStart = (e) => {
+                if (['INPUT', 'TEXTAREA', 'SPAN', 'I'].includes(e.target.tagName) || e.target.className === 'resizer') return;
+                const coords = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+                p3 = coords.x; p4 = coords.y;
+                const elId = parseInt(el.dataset.id);
+                if (!selectedTasks.has(elId)) {
+                    document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+                    selectedTasks.clear(); selectedTasks.add(elId); el.classList.add('selected');
+                }
+                const dragItems = [];
+                selectedTasks.forEach(id => {
+                    const itemEl = document.querySelector(`[data-id="${id}"]`);
+                    if (itemEl) dragItems.push({ el: itemEl, x: itemEl.offsetLeft, y: itemEl.offsetTop });
+                });
+                const onMove = (e) => {
+                    const moveCoords = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+                    p1 = (p3 - moveCoords.x) / scale; p2 = (p4 - moveCoords.y) / scale;
+                    p3 = moveCoords.x; p4 = moveCoords.y;
+                    dragItems.forEach(item => {
+                        item.x -= p1; item.y -= p2;
+                        item.el.style.left = item.x + "px"; item.el.style.top = item.y + "px";
+                    });
+                };
+                const onEnd = () => {
+                    dragItems.forEach(item => {
+                        let fx = Math.round(item.el.offsetLeft / gridSize) * gridSize;
+                        let fy = Math.round(item.el.offsetTop / gridSize) * gridSize;
+                        item.el.style.left = fx + "px"; item.el.style.top = fy + "px";
+                        updateTask(parseInt(item.el.dataset.id), 'pos', { x: fx, y: fy });
+                    });
+                    document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd);
+                };
+                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onEnd);
+            };
+            el.addEventListener('mousedown', onStart);
+        }
+
+        // --- UTILS ---
         function updateTask(id, f, v) {
             const t = allUserData[currentUser].find(x => x.id === id);
             if (!t) return;
-            if (f === 'pos') { t.x = v.x; t.y = v.y; } else { t[f] = v; }
+            if (f === 'pos') { t.x = v.x; t.y = v.y; }
+            else if (f === 'size') { t.w = v.w; t.h = v.h; }
+            else { t[f] = v; }
             saveAll();
         }
-
-        function saveAll() {
-            localStorage.setItem('spatialTaskData', JSON.stringify(allUserData));
-            localStorage.setItem('lastUser', currentUser);
+        function saveAll() { localStorage.setItem('spatialTaskData', JSON.stringify(allUserData)); localStorage.setItem('lastUser', currentUser); }
+        async function deleteTask(id) {
+            if (await showModal({ title: "Delete Task", message: "Discard card?", type: 'danger' })) {
+                allUserData[currentUser] = allUserData[currentUser].filter(t => t.id !== id);
+                document.querySelector(`[data-id="${id}"]`).remove(); saveAll();
+            }
+        }
+        function applyZoom(delta) { scale = Math.min(Math.max(0.3, scale + delta), 3); canvas.style.transform = `scale(${scale})`; }
+        function toggleTheme() {
+            const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('themeIcon').className = target === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+        }
+        function refreshUserDropdown() {
+            userSelect.innerHTML = '';
+            Object.keys(allUserData).forEach(u => {
+                const opt = document.createElement('option'); opt.value = u; opt.textContent = u;
+                if (u === currentUser) opt.selected = true; userSelect.appendChild(opt);
+            });
+        }
+        userSelect.onchange = (e) => { currentUser = e.target.value; canvas.innerHTML = ''; allUserData[currentUser].forEach(renderTask); saveAll(); };
+        
+        async function addUser() {
+            const n = await showModal({ title: "New Workspace", type: 'prompt' });
+            if (n && !allUserData[n]) { allUserData[n] = []; currentUser = n; refreshUserDropdown(); canvas.innerHTML = ''; saveAll(); }
         }
 
-        let scale = 1;
-        const MIN_SCALE = 0.3;
-        const MAX_SCALE = 3;
-
-        // --- ZOOM LOGIC ---
-        function applyZoom(delta) {
-            scale += delta;
-            scale = Math.min(Math.max(MIN_SCALE, scale), MAX_SCALE);
-            canvas.style.transform = `scale(${scale})`;
+        async function editUser() {
+            const newName = await showModal({ title: "Rename Workspace", message: "Enter a new name for this workspace:", type: 'prompt', defaultValue: currentUser });
+            if (newName && newName !== currentUser) {
+                if (allUserData[newName]) {
+                    alert("A workspace with that name already exists.");
+                    return;
+                }
+                allUserData[newName] = allUserData[currentUser];
+                delete allUserData[currentUser];
+                currentUser = newName;
+                refreshUserDropdown();
+                saveAll();
+            }
         }
 
-        // 1. Mouse Wheel Zoom
-        window.addEventListener('wheel', (e) => {
-            if (e.ctrlKey) { // Optional: only zoom if Ctrl is held, or remove if preferred
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                applyZoom(delta);
+        async function deleteUser() {
+            if (Object.keys(allUserData).length <= 1) return;
+            if (await showModal({ title: "Delete User", type: 'danger' })) {
+                delete allUserData[currentUser]; currentUser = Object.keys(allUserData)[0];
+                refreshUserDropdown(); canvas.innerHTML = ''; allUserData[currentUser].forEach(renderTask); saveAll();
             }
-        }, { passive: false });
-
-        // 2. Mobile Pinch Zoom
-        let initialDist = 0;
-        window.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 2) {
-                initialDist = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
-                );
-            }
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2) {
-                e.preventDefault();
-                const currentDist = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
-                );
-
-                const delta = currentDist > initialDist ? 0.05 : -0.05;
-                applyZoom(delta);
-                initialDist = currentDist;
-            }
-        }, { passive: false });
-
-        // 3. Update Dragging for Zoom
-        // IMPORTANT: You must divide movement by the scale factor so 
-        // the cards move at the same speed as your finger/mouse.
-        // Update this line inside your Move functions:
-        // item.x -= p1 / scale;
-        // item.y -= p2 / scale;
+        }
+        window.onload = () => { if(localStorage.getItem('theme') === 'dark') toggleTheme(); refreshUserDropdown(); allUserData[currentUser].forEach(renderTask); };
     </script>
 </body>
-
 </html>
