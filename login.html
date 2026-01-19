@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login & Register - Task Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #333; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #45a049; }
+        .toggle-link { margin-top: 15px; font-size: 14px; color: #666; cursor: pointer; text-decoration: underline; }
+        #message { margin-top: 15px; font-size: 14px; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 id="formTitle">Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="mainBtn" onclick="handleSubmit()">Login</button>
+        <div class="toggle-link" id="toggleLink" onclick="toggleMode()">New here? Create an account</div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+        // REPLACE THIS URL with your NEW deployment URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbwXb7C07DXX2l7t6bCFyA4LBHS4G8VI1-U1SoVMuEGXdRndQCDRt3kOwCuCWmy6mUMihA/exec";
+
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('formTitle').innerText = isLoginMode ? "Login" : "Register";
+            document.getElementById('mainBtn').innerText = isLoginMode ? "Login" : "Register";
+            document.getElementById('toggleLink').innerText = isLoginMode ? "New here? Create an account" : "Already have an account? Login";
+            document.getElementById('message').innerText = "";
+        }
+
+        async function handleSubmit() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const msgDiv = document.getElementById('message');
+
+            if (!user || !pass) {
+                msgDiv.innerText = "Please fill all fields.";
+                msgDiv.style.color = "red";
+                return;
+            }
+
+            const action = isLoginMode ? "login" : "register";
+            const url = `${API_URL}?action=${action}&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+
+            msgDiv.innerText = isLoginMode ? "Authenticating..." : "Creating account...";
+            msgDiv.style.color = "blue";
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    if (isLoginMode) {
+                        localStorage.setItem("currentUser", user);
+                        window.location.href = "managing-task.html";
+                    } else {
+                        msgDiv.innerText = "Registration successful! You can now login.";
+                        msgDiv.style.color = "green";
+                        toggleMode();
+                    }
+                } else {
+                    msgDiv.innerText = data.message || "Action failed.";
+                    msgDiv.style.color = "red";
+                }
+            } catch (error) {
+                msgDiv.innerText = "Error: Check deployment 'Anyone' setting.";
+                msgDiv.style.color = "red";
+            }
+        }
+    </script>
+</body>
+</html>

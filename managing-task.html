@@ -40,18 +40,15 @@
             margin: 0;
             font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-color);
-            background-image:
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: var(--grid-size) var(--grid-size);
             min-height: 100vh;
             color: var(--text-main);
             transition: background-color 0.3s, color 0.3s;
             overflow: hidden;
-            touch-action: none; /* Prevents browser pull-to-refresh interfering with canvas */
+            touch-action: none;
         }
 
-        /* LASSO STYLING */
         #lasso {
             position: absolute;
             border: 1px solid var(--accent);
@@ -61,7 +58,6 @@
             z-index: 10000;
         }
 
-        /* --- TOOLBAR CONTAINER SYSTEM --- */
         #toolbar-container {
             position: fixed;
             top: 20px;
@@ -72,7 +68,8 @@
             z-index: 1000;
         }
 
-        #toolbar, .zoom-controls {
+        #toolbar,
+        .zoom-controls {
             display: flex;
             align-items: center;
             background: var(--toolbar-bg);
@@ -84,7 +81,7 @@
             gap: 12px;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             #toolbar-container {
                 top: auto;
                 bottom: 20px;
@@ -93,28 +90,16 @@
                 flex-direction: column-reverse;
                 gap: 10px;
             }
+
             #toolbar {
                 flex-wrap: wrap;
                 justify-content: center;
-                padding: 12px;
                 width: 100%;
-                box-sizing: border-box;
             }
-            .zoom-controls {
-                width: 100%;
-                justify-content: center;
-                box-sizing: border-box;
-            }
-            button, select {
-                flex: 1 1 auto;
-                justify-content: center;
-                font-size: 13px;
-                padding: 10px 8px;
-            }
-            #themeToggle { flex: 0 0 50px; }
         }
 
-        button, select {
+        button,
+        select {
             padding: 10px 16px;
             border-radius: 8px;
             border: none;
@@ -128,19 +113,28 @@
             white-space: nowrap;
         }
 
-        .btn-main { background: var(--primary-btn); color: white; }
-        .btn-sub { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-danger { background: var(--card-bg); color: var(--danger); border: 1px solid var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: #ffffff; }
+        .btn-main {
+            background: var(--primary-btn);
+            color: white;
+        }
 
-        select {
+        .btn-sub {
             background: var(--card-bg);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            min-width: 120px;
         }
 
-        /* TASK CARDS */
+        .btn-danger {
+            background: var(--card-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: #ffffff;
+        }
+
         .task-card {
             position: absolute;
             width: 240px;
@@ -155,8 +149,16 @@
             flex-direction: column;
             border-left: 8px solid var(--accent);
             user-select: none;
-            overflow: hidden; 
-            touch-action: none; /* Crucial: Prevents touch-scrolling when interacting with cards */
+            overflow: hidden;
+            touch-action: none;
+            transition: left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out;
+            /* Smooth Figma-style sync */
+        }
+
+        /* Disable transitions while dragging so it doesn't feel laggy */
+        .task-card.dragging {
+            transition: none !important;
+            z-index: 5000;
         }
 
         .task-card.selected {
@@ -197,7 +199,7 @@
         }
 
         .resizer {
-            width: 25px; /* Larger hit-area for touch devices */
+            width: 25px;
             height: 25px;
             border-radius: 0 0 12px 0;
             background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
@@ -205,7 +207,6 @@
             right: 0;
             bottom: 0;
             cursor: nwse-resize;
-            touch-action: none;
         }
 
         .color-picker {
@@ -221,7 +222,6 @@
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
-            text-transform: uppercase;
         }
 
         .zoom-btn {
@@ -233,23 +233,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
             border: 1px solid var(--border-color);
             cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .zoom-btn:hover {
-            background: var(--primary-btn);
-            color: white;
-        }
-        
         #canvas {
             transform-origin: 0 0;
             transition: transform 0.1s ease-out;
         }
 
-        /* MODAL POPUP STYLING */
+        /* Sync Indicator */
+        #sync-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: var(--text-sub);
+            opacity: 0.6;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -269,9 +273,8 @@
             padding: 25px;
             border-radius: 16px;
             width: 350px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-color);
             text-align: center;
+            border: 1px solid var(--border-color);
         }
 
         .modal-input {
@@ -282,9 +285,8 @@
             border: 1px solid var(--border-color);
             background: var(--bg-color);
             color: var(--text-main);
-            box-sizing: border-box;
-            outline: none;
             display: none;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -292,6 +294,7 @@
 <body onmousedown="initLasso(event)">
 
     <div id="lasso"></div>
+    <div id="sync-status">Cloud Ready</div>
 
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal-box">
@@ -309,26 +312,25 @@
         <div class="zoom-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
             <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
             <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
-            <button class="zoom-btn" style="font-size: 12px;" onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
+            <button class="zoom-btn" style="font-size: 12px;"
+                onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
         </div>
 
         <div id="toolbar" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-            <button class="btn-main" onclick="createTask()">
-                <i class="bi bi-plus-lg"></i> Add New Task
-            </button>
+            <button class="btn-main" onclick="createTask()"><i class="bi bi-plus-lg"></i> Add Task</button>
             <select id="userSelect"></select>
-            <button class="btn-sub" onclick="addUser()">
-                <i class="bi bi-person-plus"></i> Add User
-            </button>
-            <button class="btn-sub" onclick="editUser()">
-                <i class="bi bi-pencil-square"></i> Edit User
-            </button>
-            <button class="btn-danger" onclick="deleteUser()">
-                <i class="bi bi-trash3"></i> Delete User
-            </button>
-            <button id="themeToggle" class="btn-sub" onclick="toggleTheme()">
-                <i id="themeIcon" class="bi bi-sun-fill"></i>
-            </button>
+            <button class="btn-sub" onclick="addUser()"><i class="bi bi-person-plus"></i> Workspace</button>
+            <button class="btn-sub" onclick="editUser()"><i class="bi bi-pencil-square"></i> Rename</button>
+            <button class="btn-danger" onclick="deleteUser()"><i class="bi bi-trash3"></i> Delete</button>
+            <button id="themeToggle" class="btn-sub" onclick="toggleTheme()"><i id="themeIcon"
+                    class="bi bi-sun-fill"></i></button>
+            <button class="btn-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+        </div>
+        <div id="profile-info"
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 15px; background: var(--toolbar-bg); border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 20px var(--shadow);"
+            onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+            <i class="bi bi-person-circle" style="font-size: 1.2rem; color: var(--accent);"></i>
+            <span id="display-username" style="font-weight: 600; font-size: 14px; color: var(--text-main);">User</span>
         </div>
     </div>
 
@@ -339,19 +341,30 @@
         const canvas = document.getElementById('canvas');
         const userSelect = document.getElementById('userSelect');
         const lasso = document.getElementById('lasso');
-        const modalOverlay = document.getElementById('modalOverlay');
-        const modalInput = document.getElementById('modalInput');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-        
-        let modalResolver = null;
-        let currentUser = localStorage.getItem('lastUser') || 'Personal';
-        let allUserData = JSON.parse(localStorage.getItem('spatialTaskData')) || { 'Personal': [], 'Work': [] };
-        let selectedTasks = new Set();
-        let scale = 1;
+        const statusEl = document.getElementById('sync-status');
+        const API_URL = "https://script.google.com/macros/s/AKfycbwXb7C07DXX2l7t6bCFyA4LBHS4G8VI1-U1SoVMuEGXdRndQCDRt3kOwCuCWmy6mUMihA/exec";
+        const loggedInUser = localStorage.getItem("currentUser");
 
-        // --- LASSO SELECTION ---
+        let modalResolver = null;
+        let scale = 1;
+        let selectedTasks = new Set();
+        let currentUser = 'Personal';
+        let allUserData = { 'Personal': [] };
+
+        // --- TIMESTAMP GUARD VARIABLES ---
+        let lastLocalUpdate = 0;
+
+        function checkAuth() {
+            if (!loggedInUser) { window.location.href = "login.html"; return false; }
+            return true;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
+
+        // --- LASSO (Selection Logic) ---
         function initLasso(e) {
             if (e.target !== document.body && e.target !== canvas) return;
             if (!e.shiftKey) {
@@ -361,14 +374,11 @@
                 });
                 selectedTasks.clear();
             }
-            const startX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-            const startY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-            lasso.style.display = 'block';
-            lasso.style.width = '0px'; lasso.style.height = '0px';
+            const startX = e.clientX; const startY = e.clientY;
+            lasso.style.display = 'block'; lasso.style.width = '0px'; lasso.style.height = '0px';
 
             function onMouseMove(moveEvent) {
-                const currentX = moveEvent.clientX || (moveEvent.touches ? moveEvent.touches[0].clientX : 0);
-                const currentY = moveEvent.clientY || (moveEvent.touches ? moveEvent.touches[0].clientY : 0);
+                const currentX = moveEvent.clientX; const currentY = moveEvent.clientY;
                 const left = Math.min(startX, currentX); const top = Math.min(startY, currentY);
                 const width = Math.abs(currentX - startX); const height = Math.abs(currentY - startY);
                 lasso.style.left = left + 'px'; lasso.style.top = top + 'px';
@@ -385,175 +395,207 @@
             document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
         }
 
-        // --- UNIVERSAL MODAL ---
+        // --- MODAL ---
         async function showModal({ title, message, type = 'confirm', defaultValue = "" }) {
-            modalTitle.innerText = title; modalMessage.innerText = message || "";
-            modalInput.value = defaultValue; modalInput.style.display = (type === 'prompt') ? 'block' : 'none';
-            modalConfirmBtn.className = (type === 'danger') ? 'btn-danger' : 'btn-main';
-            modalOverlay.style.display = 'flex';
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message || "";
+            const input = document.getElementById('modalInput');
+            input.value = defaultValue; input.style.display = (type === 'prompt') ? 'block' : 'none';
+            document.getElementById('modalConfirmBtn').className = (type === 'danger') ? 'btn-danger' : 'btn-main';
+            document.getElementById('modalOverlay').style.display = 'flex';
             return new Promise(r => modalResolver = r);
         }
         function handleModalResponse(confirmed) {
-            modalOverlay.style.display = 'none';
+            document.getElementById('modalOverlay').style.display = 'none';
             if (!confirmed) return modalResolver(null);
-            modalResolver(modalInput.style.display === 'block' ? modalInput.value : true);
+            modalResolver(document.getElementById('modalInput').style.display === 'block' ? document.getElementById('modalInput').value : true);
         }
 
-        // --- TASK LOGIC ---
+        // --- TASKS ---
         function createTask() {
             const id = Date.now();
-            const newTask = { id, title: 'New Task', desc: 'Details...', color: '#007bff', x: 120, y: 120, w: 240, h: 120 };
+            const newTask = { id, title: 'New Task', desc: 'Details...', color: '#007bff', x: 120, y: 120, w: 240, h: 160 };
+            if (!allUserData[currentUser]) allUserData[currentUser] = [];
             allUserData[currentUser].push(newTask);
             renderTask(newTask);
-            saveAll();
+            saveAllAndSync();
         }
 
         function renderTask(task) {
             const card = document.createElement('div');
             card.className = 'task-card';
             card.style.left = task.x + 'px'; card.style.top = task.y + 'px';
-            card.style.width = (task.w || 240) + 'px'; card.style.height = (task.h || 120) + 'px';
+            card.style.width = (task.w || 240) + 'px'; card.style.height = (task.h || 160) + 'px';
             card.style.borderLeftColor = task.color;
             card.dataset.id = task.id;
             card.innerHTML = `
-                <input type="text" class="title-input" value="${task.title}" onchange="updateTask(${task.id}, 'title', this.value)">
-                <textarea class="task-textarea" oninput="updateTask(${task.id}, 'desc', this.value)">${task.desc}</textarea>
-                <div class="card-footer">
-                    <input type="color" class="color-picker" value="${task.color}" oninput="updateTask(${task.id}, 'color', this.value); this.closest('.task-card').style.borderLeftColor = this.value">
-                    <span class="delete-btn" onclick="deleteTask(${task.id})"><i class="bi bi-trash-fill"></i> REMOVE</span>
-                </div>
-                <div class="resizer"></div>`;
+            <input type="text" class="title-input" value="${task.title}" onchange="updateTask(${task.id}, 'title', this.value)">
+            <textarea class="task-textarea" oninput="updateTask(${task.id}, 'desc', this.value)">${task.desc}</textarea>
+            <div class="card-footer">
+                <input type="color" class="color-picker" value="${task.color}" oninput="updateTask(${task.id}, 'color', this.value); this.closest('.task-card').style.borderLeftColor = this.value">
+                <span class="delete-btn" onclick="deleteTask(${task.id})"><i class="bi bi-trash-fill"></i> REMOVE</span>
+            </div>
+            <div class="resizer"></div>`;
             canvas.appendChild(card);
             makeDraggable(card);
             makeResizable(card);
         }
 
-        // --- RESIZE LOGIC (SNAP TO GRID + TOUCH) ---
         function makeResizable(card) {
             const resizer = card.querySelector('.resizer');
-            
             const onStart = (e) => {
                 e.preventDefault(); e.stopPropagation();
-                
-                const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-                const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-                
-                let startX = clientX;
-                let startY = clientY;
-                let startW = card.offsetWidth;
-                let startH = card.offsetHeight;
-
+                card.classList.add('dragging');
+                const startX = e.clientX || e.touches[0].clientX;
+                const startY = e.clientY || e.touches[0].clientY;
+                const startW = card.offsetWidth; const startH = card.offsetHeight;
                 const onMove = (me) => {
-                    const currentX = me.clientX || (me.touches ? me.touches[0].clientX : 0);
-                    const currentY = me.clientY || (me.touches ? me.touches[0].clientY : 0);
-                    let currentW = startW + (currentX - startX) / scale;
-                    let currentH = startH + (currentY - startY) / scale;
-                    card.style.width = currentW + 'px';
-                    card.style.height = currentH + 'px';
+                    const curX = me.clientX || (me.touches ? me.touches[0].clientX : 0);
+                    const curY = me.clientY || (me.touches ? me.touches[0].clientY : 0);
+                    card.style.width = (startW + (curX - startX) / scale) + 'px';
+                    card.style.height = (startH + (curY - startY) / scale) + 'px';
                 };
-
                 const onEnd = () => {
-                    let finalW = Math.round(card.offsetWidth / gridSize) * gridSize;
-                    let finalH = Math.round(card.offsetHeight / gridSize) * gridSize;
-                    finalW = Math.max(gridSize * 2, finalW);
-                    finalH = Math.max(gridSize * 2, finalH);
-                    card.style.width = finalW + 'px';
-                    card.style.height = finalH + 'px';
-                    updateTask(parseInt(card.dataset.id), 'size', { w: finalW, h: finalH });
-                    
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onEnd);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onEnd);
+                    card.classList.remove('dragging');
+                    let fw = Math.max(80, Math.round(card.offsetWidth / gridSize) * gridSize);
+                    let fh = Math.max(80, Math.round(card.offsetHeight / gridSize) * gridSize);
+                    card.style.width = fw + 'px'; card.style.height = fh + 'px';
+                    updateTask(parseInt(card.dataset.id), 'size', { w: fw, h: fh });
+                    document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd);
                 };
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onEnd);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onEnd);
+                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onEnd);
             };
-
             resizer.addEventListener('mousedown', onStart);
-            resizer.addEventListener('touchstart', onStart, { passive: false });
         }
 
-        // --- DRAG LOGIC (SNAP TO GRID + TOUCH) ---
         function makeDraggable(el) {
             let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
-            
             const onStart = (e) => {
                 if (['INPUT', 'TEXTAREA', 'SPAN', 'I'].includes(e.target.tagName) || e.target.className === 'resizer') return;
-                
                 const coords = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
                 p3 = coords.x; p4 = coords.y;
-                
+
+                const dragItems = [];
                 const elId = parseInt(el.dataset.id);
                 if (!selectedTasks.has(elId)) {
                     document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
                     selectedTasks.clear(); selectedTasks.add(elId); el.classList.add('selected');
                 }
-                
-                const dragItems = [];
+
                 selectedTasks.forEach(id => {
                     const itemEl = document.querySelector(`[data-id="${id}"]`);
-                    if (itemEl) dragItems.push({ el: itemEl, x: itemEl.offsetLeft, y: itemEl.offsetTop });
+                    if (itemEl) {
+                        itemEl.classList.add('dragging');
+                        dragItems.push({ el: itemEl, x: itemEl.offsetLeft, y: itemEl.offsetTop });
+                    }
                 });
 
                 const onMove = (me) => {
                     const moveCoords = me.touches ? { x: me.touches[0].clientX, y: me.touches[0].clientY } : { x: me.clientX, y: me.clientY };
                     p1 = (p3 - moveCoords.x) / scale; p2 = (p4 - moveCoords.y) / scale;
                     p3 = moveCoords.x; p4 = moveCoords.y;
-                    
-                    dragItems.forEach(item => {
-                        item.x -= p1; item.y -= p2;
-                        item.el.style.left = item.x + "px"; item.el.style.top = item.y + "px";
-                    });
+                    dragItems.forEach(item => { item.x -= p1; item.y -= p2; item.el.style.left = item.x + "px"; item.el.style.top = item.y + "px"; });
                 };
 
                 const onEnd = () => {
                     dragItems.forEach(item => {
+                        item.el.classList.remove('dragging');
                         let fx = Math.round(item.el.offsetLeft / gridSize) * gridSize;
                         let fy = Math.round(item.el.offsetTop / gridSize) * gridSize;
                         item.el.style.left = fx + "px"; item.el.style.top = fy + "px";
                         updateTask(parseInt(item.el.dataset.id), 'pos', { x: fx, y: fy });
                     });
                     document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onEnd);
-                    document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd);
                 };
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onEnd);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onEnd);
+                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onEnd);
             };
-            
             el.addEventListener('mousedown', onStart);
-            el.addEventListener('touchstart', onStart, { passive: false });
         }
 
-        // --- UTILS ---
+        // --- SYNC & CORE LOGIC ---
         function updateTask(id, f, v) {
+            if (!allUserData[currentUser]) return;
             const t = allUserData[currentUser].find(x => x.id === id);
             if (!t) return;
             if (f === 'pos') { t.x = v.x; t.y = v.y; }
             else if (f === 'size') { t.w = v.w; t.h = v.h; }
             else { t[f] = v; }
-            saveAll();
+            saveAllAndSync();
         }
-        function saveAll() { localStorage.setItem('spatialTaskData', JSON.stringify(allUserData)); localStorage.setItem('lastUser', currentUser); }
+
+        function saveAllAndSync() {
+            lastLocalUpdate = Date.now(); // Mark the time we touched the data
+            localStorage.setItem('spatialTaskData', JSON.stringify(allUserData));
+            localStorage.setItem('lastLocalUpdate', lastLocalUpdate);
+            localStorage.setItem('lastUser', currentUser);
+            syncToCloud(); // Trigger immediate upload
+        }
+
+        async function syncToCloud() {
+            if (!loggedInUser) return;
+            statusEl.innerText = "Syncing...";
+            const dataString = JSON.stringify(allUserData);
+            const url = `${API_URL}?action=updateTasks&username=${encodeURIComponent(loggedInUser)}&data=${encodeURIComponent(dataString)}&updated=${lastLocalUpdate}`;
+            try {
+                await fetch(url, { mode: 'no-cors' });
+                statusEl.innerText = "Cloud Synced";
+            } catch (e) {
+                console.error("Sync Failed", e);
+                statusEl.innerText = "Offline";
+            }
+        }
+
+        async function syncFromCloud() {
+            if (!loggedInUser) return;
+            const url = `${API_URL}?action=getTasks&username=${encodeURIComponent(loggedInUser)}`;
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                const cloudTimestamp = parseInt(result.updated) || 0;
+
+                // TIMESTAMP GUARD: Only update if cloud is strictly newer than our last action
+                if (result.data && result.data !== "{}" && cloudTimestamp > lastLocalUpdate) {
+                    const cloudData = JSON.parse(result.data);
+
+                    // Simple check if data is actually different
+                    if (JSON.stringify(cloudData) !== JSON.stringify(allUserData)) {
+                        console.log("Applying Cloud Updates...");
+                        allUserData = cloudData;
+                        lastLocalUpdate = cloudTimestamp; // Sync our clocks
+
+                        const lastUsed = localStorage.getItem('lastUser');
+                        currentUser = allUserData[lastUsed] ? lastUsed : Object.keys(allUserData)[0];
+
+                        refreshCanvas();
+                    }
+                }
+            } catch (e) { console.error("Fetch Failed", e); }
+        }
+
+        function refreshCanvas() {
+            canvas.innerHTML = '';
+            if (allUserData[currentUser]) allUserData[currentUser].forEach(renderTask);
+            refreshUserDropdown();
+        }
+
         async function deleteTask(id) {
             if (await showModal({ title: "Delete Task", message: "Discard card?", type: 'danger' })) {
                 allUserData[currentUser] = allUserData[currentUser].filter(t => t.id !== id);
-                document.querySelector(`[data-id="${id}"]`).remove(); saveAll();
+                document.querySelector(`[data-id="${id}"]`).remove();
+                saveAllAndSync();
             }
         }
+
+        // --- VIEW CONTROLS ---
         function applyZoom(delta) { scale = Math.min(Math.max(0.3, scale + delta), 3); canvas.style.transform = `scale(${scale})`; }
+
         function toggleTheme() {
             const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', target);
             localStorage.setItem('theme', target);
             document.getElementById('themeIcon').className = target === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
         }
+
         function refreshUserDropdown() {
             userSelect.innerHTML = '';
             Object.keys(allUserData).forEach(u => {
@@ -561,36 +603,60 @@
                 if (u === currentUser) opt.selected = true; userSelect.appendChild(opt);
             });
         }
-        userSelect.onchange = (e) => { currentUser = e.target.value; canvas.innerHTML = ''; allUserData[currentUser].forEach(renderTask); saveAll(); };
-        
+
+        userSelect.onchange = (e) => {
+            currentUser = e.target.value;
+            refreshCanvas();
+            saveAllAndSync();
+        };
+
         async function addUser() {
             const n = await showModal({ title: "New Workspace", type: 'prompt' });
-            if (n && !allUserData[n]) { allUserData[n] = []; currentUser = n; refreshUserDropdown(); canvas.innerHTML = ''; saveAll(); }
+            if (n && !allUserData[n]) { allUserData[n] = []; currentUser = n; refreshCanvas(); saveAllAndSync(); }
         }
 
         async function editUser() {
-            const newName = await showModal({ title: "Rename Workspace", message: "Enter a new name for this workspace:", type: 'prompt', defaultValue: currentUser });
-            if (newName && newName !== currentUser) {
-                if (allUserData[newName]) {
-                    alert("A workspace with that name already exists.");
-                    return;
-                }
-                allUserData[newName] = allUserData[currentUser];
-                delete allUserData[currentUser];
-                currentUser = newName;
-                refreshUserDropdown();
-                saveAll();
+            const n = await showModal({ title: "Rename Workspace", type: 'prompt', defaultValue: currentUser });
+            if (n && n !== currentUser) {
+                allUserData[n] = allUserData[currentUser]; delete allUserData[currentUser];
+                currentUser = n; refreshUserDropdown(); saveAllAndSync();
             }
         }
 
         async function deleteUser() {
             if (Object.keys(allUserData).length <= 1) return;
-            if (await showModal({ title: "Delete User", type: 'danger' })) {
+            if (await showModal({ title: "Delete Workspace", type: 'danger' })) {
                 delete allUserData[currentUser]; currentUser = Object.keys(allUserData)[0];
-                refreshUserDropdown(); canvas.innerHTML = ''; allUserData[currentUser].forEach(renderTask); saveAll();
+                refreshCanvas(); saveAllAndSync();
             }
         }
-        window.onload = () => { if(localStorage.getItem('theme') === 'dark') toggleTheme(); refreshUserDropdown(); allUserData[currentUser].forEach(renderTask); };
+
+        window.onload = () => {
+            if (!checkAuth()) return;
+            
+            const userDisplay = document.getElementById('display-username');
+            if (userDisplay && loggedInUser) userDisplay.textContent = loggedInUser;
+            
+
+            if (localStorage.getItem('theme') === 'dark') toggleTheme();
+
+            const cachedData = localStorage.getItem('spatialTaskData');
+            const cachedTime = localStorage.getItem('lastLocalUpdate');
+
+            if (cachedData) {
+                allUserData = JSON.parse(cachedData);
+                lastLocalUpdate = parseInt(cachedTime) || 0;
+                currentUser = localStorage.getItem('lastUser') || Object.keys(allUserData)[0];
+                refreshCanvas();
+            }
+
+            syncFromCloud();
+        };
+
+        // SYNC INTERVALS
+        setInterval(syncToCloud, 4000);   // Check/Push local changes every 4s
+        setInterval(syncFromCloud, 2000); // Check for remote changes every 2s
     </script>
 </body>
+
 </html>
