@@ -120,6 +120,10 @@
             z-index: 1000;
         }
 
+        #toolbar-container.menu-open {
+            z-index: 6000;
+        }
+
         #toolbar,
         .zoom-controls {
             display: flex;
@@ -131,6 +135,10 @@
             box-shadow: 0 4px 20px var(--shadow);
             border: 1px solid rgba(0, 0, 0, 0.05);
             gap: 12px;
+        }
+
+        #toolbar {
+            position: relative;
         }
 
         @media (max-width: 1024px) {
@@ -148,6 +156,115 @@
                 justify-content: center;
                 width: 100%;
             }
+
+            #profile-info {
+                align-self: center;
+            }
+        }
+
+        @media (max-width: 640px) {
+            #toolbar-container {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+                gap: 8px;
+            }
+
+            #toolbar,
+            .zoom-controls,
+            #profile-info {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            #toolbar {
+                display: grid;
+                grid-template-columns: 48px minmax(0, 1fr) 48px;
+                align-items: center;
+                gap: 8px;
+                padding: 12px;
+            }
+
+            #toolbar button {
+                width: 48px;
+                height: 48px;
+                min-width: 48px;
+                padding: 0;
+                justify-content: center;
+            }
+
+            #toolbar .btn-label {
+                display: inline;
+            }
+
+            #toolbar select {
+                min-width: 0;
+                height: 48px;
+                padding: 10px 12px;
+                width: 100%;
+            }
+
+            #toolbar .toolbar-secondary {
+                display: none;
+            }
+
+            #toolbar .toolbar-primary {
+                grid-column: 1;
+            }
+
+            #toolbar .toolbar-primary .btn-label {
+                display: none;
+            }
+
+            #toolbar .more-menu-container {
+                display: flex;
+                grid-column: 3;
+                justify-content: flex-end;
+                align-items: center;
+            }
+
+            #toolbar .more-menu-trigger {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                min-width: 48px;
+                padding: 0;
+            }
+
+            #toolbar .more-menu-panel {
+                width: min(240px, calc(100vw - 32px));
+            }
+
+            #toolbar .more-menu-panel button {
+                width: 100%;
+                min-width: 0;
+                height: auto;
+                padding: 12px 14px;
+                justify-content: flex-start;
+            }
+
+            #toolbar .more-menu-panel .btn-label {
+                display: inline;
+            }
+
+            #profile-info {
+                justify-content: center;
+                padding: 10px 12px;
+            }
+
+            #profile-info span {
+                max-width: 140px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .zoom-controls {
+                justify-content: space-between;
+                padding: 10px 12px;
+            }
         }
 
         button,
@@ -163,6 +280,51 @@
             align-items: center;
             gap: 8px;
             white-space: nowrap;
+        }
+
+        .btn-label {
+            display: inline;
+        }
+
+        .more-menu-container {
+            position: relative;
+            display: none;
+        }
+
+        .more-menu-panel {
+            position: absolute;
+            right: 0;
+            bottom: calc(100% + 10px);
+            width: 220px;
+            max-width: min(280px, calc(100vw - 24px));
+            max-height: min(360px, calc(100vh - 24px));
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: var(--toolbar-bg);
+            box-shadow: 0 18px 45px var(--shadow);
+            backdrop-filter: blur(12px);
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            z-index: 7000;
+            opacity: 0;
+            transform: translateY(8px) scale(0.96);
+            transform-origin: bottom right;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .more-menu-panel.open {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .more-menu-item {
+            width: 100%;
+            justify-content: flex-start;
+            text-align: left;
         }
 
         .btn-main {
@@ -380,21 +542,35 @@
             <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
             <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
             <span id="zoomLevel" class="zoom-level">100%</span>
+            <button class="zoom-btn" onclick="fitToContent()" title="Fit Tasks"><i class="bi bi-bounding-box"></i></button>
             <button class="zoom-btn" style="font-size: 12px;"
                 onclick="resetZoom()">1:1</button>
         </div>
 
         <div id="toolbar" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-            <button class="btn-main" onclick="createTask()"><i class="bi bi-plus-lg"></i> Add Task</button>
+            <button class="btn-main toolbar-primary" onclick="createTask()" aria-label="Add Task" title="Add Task"><i class="bi bi-plus-lg"></i><span class="btn-label">Add Task</span></button>
             <select id="userSelect"></select>
-            <button class="btn-sub" onclick="addUser()"><i class="bi bi-person-plus"></i> Workspace</button>
-            <button class="btn-sub" onclick="editUser()"><i class="bi bi-pencil-square"></i> Rename</button>
-            <button class="btn-danger" onclick="deleteUser()"><i class="bi bi-trash3"></i> Delete</button>
-            <button id="gridToggle" class="btn-sub" onclick="toggleGrid()"><i id="gridIcon"
-                class="bi bi-grid-3x3-gap-fill"></i> Grid</button>
-            <button id="themeToggle" class="btn-sub" onclick="toggleTheme()"><i id="themeIcon"
+            <button class="btn-sub toolbar-secondary" onclick="addUser()" aria-label="Add Workspace" title="Add Workspace"><i class="bi bi-person-plus"></i><span class="btn-label">Workspace</span></button>
+            <button class="btn-sub toolbar-secondary" onclick="editUser()" aria-label="Rename Workspace" title="Rename Workspace"><i class="bi bi-pencil-square"></i><span class="btn-label">Rename</span></button>
+            <button class="btn-danger toolbar-secondary" onclick="deleteUser()" aria-label="Delete Workspace" title="Delete Workspace"><i class="bi bi-trash3"></i><span class="btn-label">Delete</span></button>
+            <button id="gridToggle" class="btn-sub toolbar-secondary" onclick="toggleGrid()" aria-label="Toggle Grid" title="Toggle Grid"><i id="gridIcon"
+                class="bi bi-grid-3x3-gap-fill"></i><span class="btn-label">Grid</span></button>
+            <button id="themeToggle" class="btn-sub toolbar-secondary" onclick="toggleTheme()" aria-label="Toggle Theme" title="Toggle Theme"><i id="themeIcon"
                     class="bi bi-sun-fill"></i></button>
-            <button class="btn-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            <button class="btn-danger toolbar-secondary" onclick="logout()" aria-label="Logout" title="Logout"><i class="bi bi-box-arrow-right"></i><span class="btn-label">Logout</span></button>
+            <div class="more-menu-container" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                <button id="moreMenuTrigger" class="btn-sub more-menu-trigger" onclick="toggleMoreMenu()" aria-label="More Actions" title="More Actions">
+                    <i class="bi bi-three-dots"></i>
+                </button>
+                <div id="moreMenuPanel" class="more-menu-panel">
+                    <button class="btn-sub more-menu-item" onclick="closeMoreMenu(); addUser();"><i class="bi bi-person-plus"></i><span class="btn-label">Workspace</span></button>
+                    <button class="btn-sub more-menu-item" onclick="closeMoreMenu(); editUser();"><i class="bi bi-pencil-square"></i><span class="btn-label">Rename</span></button>
+                    <button class="btn-danger more-menu-item" onclick="closeMoreMenu(); deleteUser();"><i class="bi bi-trash3"></i><span class="btn-label">Delete</span></button>
+                    <button class="btn-sub more-menu-item" onclick="closeMoreMenu(); toggleGrid();"><i class="bi bi-grid-3x3-gap-fill"></i><span class="btn-label">Grid</span></button>
+                    <button class="btn-sub more-menu-item" onclick="closeMoreMenu(); toggleTheme();"><i class="bi bi-moon-stars-fill"></i><span class="btn-label">Theme</span></button>
+                    <button class="btn-danger more-menu-item" onclick="closeMoreMenu(); logout();"><i class="bi bi-box-arrow-right"></i><span class="btn-label">Logout</span></button>
+                </div>
+            </div>
         </div>
         <div id="profile-info"
             style="display: flex; align-items: center; gap: 8px; padding: 10px 15px; background: var(--toolbar-bg); border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 20px var(--shadow);"
@@ -417,6 +593,8 @@
         const statusEl = document.getElementById('sync-status');
         const zoomLevelEl = document.getElementById('zoomLevel');
         const gridIconEl = document.getElementById('gridIcon');
+        const moreMenuPanel = document.getElementById('moreMenuPanel');
+        const moreMenuTrigger = document.getElementById('moreMenuTrigger');
         const API_URL = "https://script.google.com/macros/s/AKfycbwXb7C07DXX2l7t6bCFyA4LBHS4G8VI1-U1SoVMuEGXdRndQCDRt3kOwCuCWmy6mUMihA/exec";
         const loggedInUser = localStorage.getItem("currentUser");
 
@@ -522,6 +700,79 @@
             showGrid = !showGrid;
             localStorage.setItem('showGrid', showGrid);
             updateGridBackground();
+        }
+
+        function closeMoreMenu() {
+            moreMenuPanel.classList.remove('open');
+            moreMenuTrigger.setAttribute('aria-expanded', 'false');
+            document.getElementById('toolbar-container').classList.remove('menu-open');
+        }
+
+        function positionMoreMenu() {
+            const menuMargin = 12;
+
+            moreMenuPanel.style.left = 'auto';
+            moreMenuPanel.style.right = '0';
+            moreMenuPanel.style.top = 'auto';
+            moreMenuPanel.style.bottom = 'calc(100% + 10px)';
+            moreMenuPanel.style.transformOrigin = 'bottom right';
+
+            const triggerRect = moreMenuTrigger.getBoundingClientRect();
+            const parentRect = moreMenuTrigger.parentElement.getBoundingClientRect();
+            const panelRect = moreMenuPanel.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            const spaceAbove = triggerRect.top - menuMargin;
+            const spaceBelow = viewportHeight - triggerRect.bottom - menuMargin;
+            const shouldOpenDown = spaceAbove < panelRect.height && spaceBelow > spaceAbove;
+            const shouldAlignLeft = triggerRect.right - panelRect.width < menuMargin && triggerRect.left + panelRect.width <= viewportWidth - menuMargin;
+
+            if (shouldOpenDown) {
+                moreMenuPanel.style.top = 'calc(100% + 10px)';
+                moreMenuPanel.style.bottom = 'auto';
+                moreMenuPanel.style.transformOrigin = shouldAlignLeft ? 'top left' : 'top right';
+            }
+
+            if (shouldAlignLeft) {
+                moreMenuPanel.style.left = '0';
+                moreMenuPanel.style.right = 'auto';
+            }
+
+            const adjustedRect = moreMenuPanel.getBoundingClientRect();
+            const overflowRight = adjustedRect.right - (viewportWidth - menuMargin);
+            const overflowLeft = menuMargin - adjustedRect.left;
+            const overflowBottom = adjustedRect.bottom - (viewportHeight - menuMargin);
+            const overflowTop = menuMargin - adjustedRect.top;
+
+            if (overflowRight > 0) {
+                const nextLeft = (shouldAlignLeft ? 0 : parentRect.width - adjustedRect.width) - overflowRight;
+                moreMenuPanel.style.left = `${nextLeft}px`;
+                moreMenuPanel.style.right = 'auto';
+            }
+
+            if (overflowLeft > 0) {
+                moreMenuPanel.style.left = `${overflowLeft}px`;
+                moreMenuPanel.style.right = 'auto';
+            }
+
+            if (overflowBottom > 0) {
+                const nextTop = (shouldOpenDown ? parentRect.height + 10 : -adjustedRect.height - 10) - overflowBottom;
+                moreMenuPanel.style.top = `${nextTop}px`;
+                moreMenuPanel.style.bottom = 'auto';
+            }
+
+            if (overflowTop > 0) {
+                moreMenuPanel.style.top = `${overflowTop}px`;
+                moreMenuPanel.style.bottom = 'auto';
+            }
+        }
+
+        function toggleMoreMenu() {
+            const isOpen = moreMenuPanel.classList.toggle('open');
+            moreMenuTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.getElementById('toolbar-container').classList.toggle('menu-open', isOpen);
+            if (isOpen) positionMoreMenu();
         }
 
         function canStartTouchViewport(target) {
@@ -854,6 +1105,43 @@
             setCanvasScale(scale + delta, window.innerWidth / 2, window.innerHeight / 2);
         }
 
+        function fitToContent() {
+            const tasks = allUserData[currentUser] || [];
+            if (!tasks.length) {
+                resetZoom();
+                return;
+            }
+
+            const padding = 120;
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+
+            tasks.forEach(task => {
+                const taskWidth = task.w || 240;
+                const taskHeight = task.h || 160;
+                minX = Math.min(minX, task.x);
+                minY = Math.min(minY, task.y);
+                maxX = Math.max(maxX, task.x + taskWidth);
+                maxY = Math.max(maxY, task.y + taskHeight);
+            });
+
+            const boundsWidth = Math.max(maxX - minX, gridSize * 4);
+            const boundsHeight = Math.max(maxY - minY, gridSize * 4);
+            const viewportWidth = canvasStage.clientWidth;
+            const viewportHeight = canvasStage.clientHeight;
+            const nextScale = Math.min(
+                Math.max(0.3, Math.min((viewportWidth - padding * 2) / boundsWidth, (viewportHeight - padding * 2) / boundsHeight)),
+                2.2
+            );
+
+            scale = nextScale;
+            panX = ((viewportWidth - (boundsWidth * scale)) / 2) - (minX * scale);
+            panY = ((viewportHeight - (boundsHeight * scale)) / 2) - (minY * scale);
+            applyViewport();
+        }
+
         function resetZoom() {
             scale = 1;
             panX = 0;
@@ -939,6 +1227,22 @@
             if (e.code === 'Space') {
                 isSpacePressed = false;
                 if (!isPanning) canvasStage.classList.remove('panning');
+            }
+
+            if (e.code === 'Escape') {
+                closeMoreMenu();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.more-menu-container')) {
+                closeMoreMenu();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (moreMenuPanel.classList.contains('open')) {
+                positionMoreMenu();
             }
         });
 

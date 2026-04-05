@@ -1,0 +1,12 @@
+# Editor settings
+.vscode/
+
+# Windows system files
+Thumbs.db
+Desktop.ini
+
+# macOS system files
+.DS_Store
+
+# Logs
+*.log
