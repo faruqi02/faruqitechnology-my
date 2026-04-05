@@ -11,9 +11,12 @@
     <style>
         /* THEME VARIABLES */
         :root {
+            --canvas-size: 30000px;
             --grid-size: 40px;
             --bg-color: #f0f2f5;
-            --grid-color: #e0e0e0;
+            --grid-color: rgba(28, 42, 62, 0.08);
+            --grid-major-color: rgba(28, 42, 62, 0.16);
+            --grid-glow: rgba(0, 123, 255, 0.08);
             --toolbar-bg: rgba(255, 255, 255, 0.9);
             --card-bg: #ffffff;
             --text-main: #222222;
@@ -27,7 +30,9 @@
 
         [data-theme="dark"] {
             --bg-color: #1a1a1b;
-            --grid-color: #2d2d2e;
+            --grid-color: rgba(255, 255, 255, 0.06);
+            --grid-major-color: rgba(255, 255, 255, 0.12);
+            --grid-glow: rgba(0, 123, 255, 0.12);
             --toolbar-bg: rgba(30, 30, 31, 0.9);
             --card-bg: #2d2d2e;
             --text-main: #e1e1e1;
@@ -41,13 +46,59 @@
             margin: 0;
             font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-color);
-            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: var(--grid-size) var(--grid-size);
             min-height: 100vh;
             color: var(--text-main);
             transition: background-color 0.3s, color 0.3s;
             overflow: hidden;
             touch-action: none;
+        }
+
+        #canvas-stage {
+            --minor-grid-size: 40px;
+            --major-grid-size: 200px;
+            --minor-offset-x: 0px;
+            --minor-offset-y: 0px;
+            --major-offset-x: 0px;
+            --major-offset-y: 0px;
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            cursor: default;
+            background-color: var(--bg-color);
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(var(--grid-major-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-major-color) 1px, transparent 1px),
+                radial-gradient(circle at 18% 12%, var(--grid-glow), transparent 28%),
+                radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.04), transparent 24%);
+            background-size:
+                var(--minor-grid-size) var(--minor-grid-size),
+                var(--minor-grid-size) var(--minor-grid-size),
+                var(--major-grid-size) var(--major-grid-size),
+                var(--major-grid-size) var(--major-grid-size),
+                100% 100%,
+                100% 100%;
+            background-position:
+                var(--minor-offset-x) var(--minor-offset-y),
+                var(--minor-offset-x) var(--minor-offset-y),
+                var(--major-offset-x) var(--major-offset-y),
+                var(--major-offset-x) var(--major-offset-y),
+                center center,
+                center center;
+            transition: background-color 0.3s, background-image 0.3s;
+        }
+
+        #canvas-stage.panning {
+            cursor: grabbing;
+        }
+
+        #canvas-stage.grid-hidden {
+            background-image:
+                radial-gradient(circle at 18% 12%, var(--grid-glow), transparent 28%),
+                radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.04), transparent 24%);
+            background-size: 100% 100%, 100% 100%;
+            background-position: center center, center center;
         }
 
         #lasso {
@@ -238,9 +289,24 @@
             cursor: pointer;
         }
 
+        .zoom-level {
+            min-width: 58px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-sub);
+            letter-spacing: 0.04em;
+        }
+
         #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: var(--canvas-size);
+            height: var(--canvas-size);
+            background: transparent;
             transform-origin: 0 0;
-            transition: transform 0.1s ease-out;
+            transition: transform 0.12s ease-out;
         }
 
         /* Sync Indicator */
@@ -313,8 +379,9 @@
         <div class="zoom-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
             <button class="zoom-btn" onclick="applyZoom(0.1)"><i class="bi bi-plus-lg"></i></button>
             <button class="zoom-btn" onclick="applyZoom(-0.1)"><i class="bi bi-dash-lg"></i></button>
+            <span id="zoomLevel" class="zoom-level">100%</span>
             <button class="zoom-btn" style="font-size: 12px;"
-                onclick="scale = 1; canvas.style.transform = 'scale(1)';">1:1</button>
+                onclick="resetZoom()">1:1</button>
         </div>
 
         <div id="toolbar" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
@@ -323,6 +390,8 @@
             <button class="btn-sub" onclick="addUser()"><i class="bi bi-person-plus"></i> Workspace</button>
             <button class="btn-sub" onclick="editUser()"><i class="bi bi-pencil-square"></i> Rename</button>
             <button class="btn-danger" onclick="deleteUser()"><i class="bi bi-trash3"></i> Delete</button>
+            <button id="gridToggle" class="btn-sub" onclick="toggleGrid()"><i id="gridIcon"
+                class="bi bi-grid-3x3-gap-fill"></i> Grid</button>
             <button id="themeToggle" class="btn-sub" onclick="toggleTheme()"><i id="themeIcon"
                     class="bi bi-sun-fill"></i></button>
             <button class="btn-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
@@ -335,25 +404,215 @@
         </div>
     </div>
 
-    <div id="canvas"></div>
+    <div id="canvas-stage">
+        <div id="canvas"></div>
+    </div>
 
     <script>
         const gridSize = 40;
         const canvas = document.getElementById('canvas');
+        const canvasStage = document.getElementById('canvas-stage');
         const userSelect = document.getElementById('userSelect');
         const lasso = document.getElementById('lasso');
         const statusEl = document.getElementById('sync-status');
+        const zoomLevelEl = document.getElementById('zoomLevel');
+        const gridIconEl = document.getElementById('gridIcon');
         const API_URL = "https://script.google.com/macros/s/AKfycbwXb7C07DXX2l7t6bCFyA4LBHS4G8VI1-U1SoVMuEGXdRndQCDRt3kOwCuCWmy6mUMihA/exec";
         const loggedInUser = localStorage.getItem("currentUser");
 
         let modalResolver = null;
         let scale = 1;
+        let panX = 0;
+        let panY = 0;
+        let isSpacePressed = false;
+        let isPanning = false;
+        let showGrid = localStorage.getItem('showGrid') !== 'false';
+        let touchGesture = null;
         let selectedTasks = new Set();
         let currentUser = 'Personal';
         let allUserData = { 'Personal': [] };
 
         // --- TIMESTAMP GUARD VARIABLES ---
         let lastLocalUpdate = 0;
+
+        function positiveModulo(value, divisor) {
+            return ((value % divisor) + divisor) % divisor;
+        }
+
+        function updateGridBackground() {
+            canvasStage.classList.toggle('grid-hidden', !showGrid);
+            gridIconEl.className = showGrid ? 'bi bi-grid-3x3-gap-fill' : 'bi bi-grid-3x3-gap';
+            if (!showGrid) return;
+
+            const minor = Math.max(gridSize * scale, 12);
+            const major = minor * 5;
+            canvasStage.style.setProperty('--minor-grid-size', `${minor}px`);
+            canvasStage.style.setProperty('--major-grid-size', `${major}px`);
+            canvasStage.style.setProperty('--minor-offset-x', `${positiveModulo(panX, minor)}px`);
+            canvasStage.style.setProperty('--minor-offset-y', `${positiveModulo(panY, minor)}px`);
+            canvasStage.style.setProperty('--major-offset-x', `${positiveModulo(panX, major)}px`);
+            canvasStage.style.setProperty('--major-offset-y', `${positiveModulo(panY, major)}px`);
+        }
+
+        function applyViewport() {
+            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            zoomLevelEl.textContent = `${Math.round(scale * 100)}%`;
+            updateGridBackground();
+        }
+
+        function setCanvasScale(nextScale, originX = window.innerWidth / 2, originY = window.innerHeight / 2) {
+            const boundedScale = Math.min(Math.max(0.3, nextScale), 3);
+            const worldX = (originX - panX) / scale;
+            const worldY = (originY - panY) / scale;
+            scale = boundedScale;
+            panX = originX - (worldX * scale);
+            panY = originY - (worldY * scale);
+            applyViewport();
+        }
+
+        function screenToCanvas(clientX, clientY) {
+            const rect = canvasStage.getBoundingClientRect();
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function canStartPan(target) {
+            return !target.closest('#toolbar-container, .task-card, .modal-overlay, .modal-box');
+        }
+
+        function startCanvasPan(e) {
+            const wantsPan = e.button === 1 || (e.button === 0 && isSpacePressed);
+            if (!wantsPan || !canStartPan(e.target)) return;
+            e.preventDefault();
+            isPanning = true;
+            canvasStage.classList.add('panning');
+            let lastX = e.clientX;
+            let lastY = e.clientY;
+
+            const onMove = (moveEvent) => {
+                panX += moveEvent.clientX - lastX;
+                panY += moveEvent.clientY - lastY;
+                lastX = moveEvent.clientX;
+                lastY = moveEvent.clientY;
+                applyViewport();
+            };
+
+            const onEnd = () => {
+                isPanning = false;
+                canvasStage.classList.remove('panning');
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+            };
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+        }
+
+        function handleWheelZoom(e) {
+            if (e.target.closest('#toolbar-container, .modal-overlay, .modal-box')) return;
+            e.preventDefault();
+            const pointer = screenToCanvas(e.clientX, e.clientY);
+            const delta = e.deltaY < 0 ? 0.1 : -0.1;
+            setCanvasScale(scale + delta, pointer.x, pointer.y);
+        }
+
+        function toggleGrid() {
+            showGrid = !showGrid;
+            localStorage.setItem('showGrid', showGrid);
+            updateGridBackground();
+        }
+
+        function canStartTouchViewport(target) {
+            return !target.closest('#toolbar-container, .modal-overlay, .modal-box, input, textarea, select, button');
+        }
+
+        function getTouchDistance(touchA, touchB) {
+            return Math.hypot(touchB.clientX - touchA.clientX, touchB.clientY - touchA.clientY);
+        }
+
+        function getTouchCenter(touchA, touchB) {
+            return {
+                x: (touchA.clientX + touchB.clientX) / 2,
+                y: (touchA.clientY + touchB.clientY) / 2
+            };
+        }
+
+        function handleStageTouchStart(e) {
+            if (!canStartTouchViewport(e.target)) return;
+
+            if (e.touches.length === 1) {
+                touchGesture = {
+                    type: 'pan',
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+                canvasStage.classList.add('panning');
+                return;
+            }
+
+            if (e.touches.length === 2) {
+                const center = getTouchCenter(e.touches[0], e.touches[1]);
+                const localCenter = screenToCanvas(center.x, center.y);
+                touchGesture = {
+                    type: 'pinch',
+                    startScale: scale,
+                    startPanX: panX,
+                    startPanY: panY,
+                    distance: getTouchDistance(e.touches[0], e.touches[1]),
+                    centerX: localCenter.x,
+                    centerY: localCenter.y
+                };
+                canvasStage.classList.add('panning');
+            }
+        }
+
+        function handleStageTouchMove(e) {
+            if (!touchGesture) return;
+
+            if (touchGesture.type === 'pan' && e.touches.length === 1) {
+                e.preventDefault();
+                const nextTouch = e.touches[0];
+                panX += nextTouch.clientX - touchGesture.x;
+                panY += nextTouch.clientY - touchGesture.y;
+                touchGesture.x = nextTouch.clientX;
+                touchGesture.y = nextTouch.clientY;
+                applyViewport();
+                return;
+            }
+
+            if (touchGesture.type === 'pinch' && e.touches.length === 2) {
+                e.preventDefault();
+                const nextCenter = getTouchCenter(e.touches[0], e.touches[1]);
+                const localCenter = screenToCanvas(nextCenter.x, nextCenter.y);
+                const nextDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                const nextScale = Math.min(Math.max(0.3, touchGesture.startScale * (nextDistance / touchGesture.distance)), 3);
+                const worldX = (touchGesture.centerX - touchGesture.startPanX) / touchGesture.startScale;
+                const worldY = (touchGesture.centerY - touchGesture.startPanY) / touchGesture.startScale;
+
+                scale = nextScale;
+                panX = localCenter.x - (worldX * scale);
+                panY = localCenter.y - (worldY * scale);
+                applyViewport();
+            }
+        }
+
+        function handleStageTouchEnd(e) {
+            if (e.touches.length === 0) {
+                touchGesture = null;
+                if (!isSpacePressed && !isPanning) canvasStage.classList.remove('panning');
+                return;
+            }
+
+            if (e.touches.length === 1) {
+                touchGesture = {
+                    type: 'pan',
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+            }
+        }
 
         function checkAuth() {
             if (!loggedInUser) { window.location.href = "login.html"; return false; }
@@ -367,7 +626,8 @@
 
         // --- LASSO (Selection Logic) ---
         function initLasso(e) {
-            if (e.target !== document.body && e.target !== canvas) return;
+            if (e.button !== 0 || isSpacePressed || isPanning) return;
+            if (e.target !== document.body && e.target !== canvas && e.target !== canvasStage) return;
             if (!e.shiftKey) {
                 selectedTasks.forEach(id => {
                     const el = document.querySelector(`[data-id="${id}"]`);
@@ -445,6 +705,7 @@
         function makeResizable(card) {
             const resizer = card.querySelector('.resizer');
             const onStart = (e) => {
+                if (isSpacePressed || e.button === 1) return;
                 e.preventDefault(); e.stopPropagation();
                 card.classList.add('dragging');
                 const startX = e.clientX || e.touches[0].clientX;
@@ -472,6 +733,7 @@
         function makeDraggable(el) {
             let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
             const onStart = (e) => {
+                if (isSpacePressed || e.button === 1) return;
                 if (['INPUT', 'TEXTAREA', 'SPAN', 'I'].includes(e.target.tagName) || e.target.className === 'resizer') return;
                 const coords = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
                 p3 = coords.x; p4 = coords.y;
@@ -588,13 +850,23 @@
         }
 
         // --- VIEW CONTROLS ---
-        function applyZoom(delta) { scale = Math.min(Math.max(0.3, scale + delta), 3); canvas.style.transform = `scale(${scale})`; }
+        function applyZoom(delta) {
+            setCanvasScale(scale + delta, window.innerWidth / 2, window.innerHeight / 2);
+        }
+
+        function resetZoom() {
+            scale = 1;
+            panX = 0;
+            panY = 0;
+            applyViewport();
+        }
 
         function toggleTheme() {
             const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', target);
             localStorage.setItem('theme', target);
             document.getElementById('themeIcon').className = target === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+            updateGridBackground();
         }
 
         function refreshUserDropdown() {
@@ -651,8 +923,31 @@
                 refreshCanvas();
             }
 
+            applyViewport();
             syncFromCloud();
         };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                isSpacePressed = true;
+                canvasStage.classList.add('panning');
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                isSpacePressed = false;
+                if (!isPanning) canvasStage.classList.remove('panning');
+            }
+        });
+
+        canvasStage.addEventListener('mousedown', startCanvasPan);
+        canvasStage.addEventListener('wheel', handleWheelZoom, { passive: false });
+        canvasStage.addEventListener('touchstart', handleStageTouchStart, { passive: true });
+        canvasStage.addEventListener('touchmove', handleStageTouchMove, { passive: false });
+        canvasStage.addEventListener('touchend', handleStageTouchEnd);
+        canvasStage.addEventListener('touchcancel', handleStageTouchEnd);
 
         // SYNC INTERVALS
         setInterval(syncToCloud, 4000);   // Check/Push local changes every 4s
