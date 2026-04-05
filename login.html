@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login & Register - Task Manager</title>
+    <link rel="icon" type="image/png" href="public/favicon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
     
     <style>
         /* THEME VARIABLES */
@@ -112,6 +114,16 @@
 
         button#mainBtn:hover { opacity: 0.9; }
 
+        .stripe-buy-button-wrap {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .stripe-buy-button-wrap stripe-buy-button {
+            display: block;
+            width: 100%;
+        }
+
         .toggle-link { 
             margin-top: 20px; 
             font-size: 14px; 
@@ -139,10 +151,17 @@
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
         <button id="mainBtn" onclick="handleSubmit()">Login</button>
+
+        <div class="stripe-buy-button-wrap">
+            <stripe-buy-button
+                buy-button-id="buy_btn_1TIuwI2Wt55FFzmriNNLL6Bw"
+                publishable-key="pk_live_51TIoQp2Wt55FFzmrudzzu8VJpl4WHFND2L3qZKkxG8bJVJM9bZjjJxBNknQRVqjYSX9VJjzJF6wiPMpRqbD505e100A52h0j2s"
+            >
+            </stripe-buy-button>
+        </div>
         <div class="toggle-link" id="toggleLink" onclick="toggleMode()">New here? Create an account</div>
         <div id="message"></div>
     </div>
-
     <script>
         let isLoginMode = true;
         const API_URL = "https://script.google.com/macros/s/AKfycbwXb7C07DXX2l7t6bCFyA4LBHS4G8VI1-U1SoVMuEGXdRndQCDRt3kOwCuCWmy6mUMihA/exec";
