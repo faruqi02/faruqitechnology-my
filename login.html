@@ -210,6 +210,12 @@
                 return;
             }
 
+            if (!isLoginMode && /\s/.test(user)) {
+                msgDiv.innerText = "Username cannot contain whitespace.";
+                msgDiv.style.color = "#ff4d4d";
+                return;
+            }
+
             const action = isLoginMode ? "login" : "register";
             const url = `${API_URL}?action=${action}&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
 
