@@ -216,6 +216,12 @@
                 return;
             }
 
+            if (!isLoginMode && !/^[A-Za-z]/.test(user)) {
+                msgDiv.innerText = "Username must start with a letter and cannot start with a number or special character.";
+                msgDiv.style.color = "#ff4d4d";
+                return;
+            }
+
             const action = isLoginMode ? "login" : "register";
             const url = `${API_URL}?action=${action}&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
 
@@ -236,7 +242,14 @@
                         toggleMode();
                     }
                 } else {
-                    msgDiv.innerText = data.message || "Action failed.";
+                    const errorMessage = (data.message || "").toLowerCase();
+
+                    if (!isLoginMode && (errorMessage.includes("taken") || errorMessage.includes("exist") || errorMessage.includes("already"))) {
+                        msgDiv.innerText = "This username has been taken. Please choose another.";
+                    } else {
+                        msgDiv.innerText = data.message || "Action failed.";
+                    }
+
                     msgDiv.style.color = "#ff4d4d";
                 }
             } catch (error) {
